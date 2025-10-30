@@ -7,7 +7,8 @@ class Config(BaseSettings):
     REGION: str
     BUCKET_NAME: str    
     QUEUE_URL: str
-
+    SERVICE_URL_REGISTRATION_API_SOLANA: str
+    SERVICE_API_KEY_REGISTRATION_API_SOLANA: str
 
     class Config:
         env_file = ".env"
