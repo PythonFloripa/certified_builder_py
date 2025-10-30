@@ -132,6 +132,8 @@ def lambda_handler(event, context):
 
                 certificates_results_messagens.append({                
                     "order_id": result.get('participant', {}).get('event', {}).get('order_id', ""),
+                    "validation_code": result.get('participant', {}).get('validation_code', ""),
+                    "authenticity_verification_url": result.get('participant', {}).get('authenticity_verification_url', ""),                    
                     "product_id": result.get('participant', {}).get('event', {}).get('product_id', ""),
                     "product_name": result.get('participant', {}).get('event', {}).get('product_name', ""),
                     "email": result.get('participant', {}).get('email', ""),
@@ -169,3 +171,34 @@ def lambda_handler(event, context):
                 'message': 'Erro ao gerar certificados'
             })
         }
+
+
+if __name__ == "__main__":
+    # Test event for local execution
+    test_event = {
+        "Records": [
+            {
+                "body": [
+                        {
+                            "order_id": 2266,
+                            "first_name": "Maxson",
+                            "last_name": "Almeida Ferovante",
+                            "email": "maxsonferovante@gmail.com",
+                            "phone": "(48) 99223-8206",
+                            "cpf": "",
+                            "city": "Florianópolis",
+                            "product_id": 316,
+                            "product_name": "Evento de Teste",
+                            "certificate_details": "In recognition of their participation in the 90st edition of the Python Floripa Community Meeting, held on Sep 27, 2025, in Florianópolis, Brazil, with a total duration of 5 hours.",
+                            "certificate_logo": "https://tech.floripa.br/wp-content/uploads/2025/03/logo-certificado.png",
+                            "certificate_background": "https://tech.floripa.br/wp-content/uploads/2025/03/certificado-python-floripa.png",
+                            "order_date": "2025-08-28 02:44:54",
+                            "checkin_latitude": "-27.5460492",
+                            "checkin_longitude": "-48.6227075",
+                            "time_checkin": "2025-03-26 20:55:44"
+                        },                        
+                    ]
+            }
+        ]
+    }
+    lambda_handler(test_event, None)
