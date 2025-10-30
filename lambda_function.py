@@ -132,6 +132,8 @@ def lambda_handler(event, context):
 
                 certificates_results_messagens.append({                
                     "order_id": result.get('participant', {}).get('event', {}).get('order_id', ""),
+                    "validation_code": result.get('participant', {}).get('validation_code', ""),
+                    "authenticity_verification_url": result.get('participant', {}).get('authenticity_verification_url', ""),                    
                     "product_id": result.get('participant', {}).get('event', {}).get('product_id', ""),
                     "product_name": result.get('participant', {}).get('event', {}).get('product_name', ""),
                     "email": result.get('participant', {}).get('email', ""),
@@ -169,3 +171,4 @@ def lambda_handler(event, context):
                 'message': 'Erro ao gerar certificados'
             })
         }
+
