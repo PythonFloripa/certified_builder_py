@@ -7,6 +7,7 @@ from io import BytesIO
 from models.participant import Participant
 from certified_builder.utils.fetch_file_certificate import fetch_file_certificate
 from certified_builder.certificates_on_solana import CertificatesOnSolana
+from certified_builder.make_qrcode import MakeQRCode
 
 FONT_NAME = os.path.join(os.path.dirname(__file__), "fonts/PinyonScript/PinyonScript-Regular.ttf")
 VALIDATION_CODE = os.path.join(os.path.dirname(__file__), "fonts/ChakraPetch/ChakraPetch-SemiBold.ttf")
@@ -55,6 +56,11 @@ class CertifiedBuilder:
                             "certificate_code": participant.formated_validation_code()
                         }
                     )
+                    # solana_response = {
+                    #     "blockchain": {
+                    #         "verificacao_url": "https://www.google.com"
+                    #     }
+                    # }
                     participant.authenticity_verification_url = solana_response.get("blockchain", {}).get("verificacao_url", "")                    
                     
                     if not participant.authenticity_verification_url:                        
@@ -127,9 +133,10 @@ class CertifiedBuilder:
             # Create transparent layer for text and logo
             overlay = Image.new("RGBA", certificate_template.size, (255, 255, 255, 0))
             
-            # Optimize logo size
-            logo_size = (150, 150)
-            logo = logo.resize(logo_size, Image.Resampling.LANCZOS)
+            # Optimize logo size (evita upscaling para reduzir pixelização)
+            logo_max_size = (150, 150)
+            if logo.width > logo_max_size[0] or logo.height > logo_max_size[1]:
+                logo.thumbnail(logo_max_size, Image.Resampling.LANCZOS)
             
             # Paste logo - handle potential transparency issues
             try:
@@ -140,6 +147,40 @@ class CertifiedBuilder:
                 # Fallback without using the logo as its own mask
                 overlay.paste(logo, (50, 50))
             
+           
+            qrcode_size = (150, 150)                       
+            qr_code_image_io = MakeQRCode.generate_qr_code(participant.authenticity_verification_url)            
+            qr_code_image = Image.open(qr_code_image_io).convert("RGBA")            
+            # comentário: para manter o QR nítido, usamos NEAREST ao redimensionar
+            if qr_code_image.size != qrcode_size:
+                qr_code_image = qr_code_image.resize(qrcode_size, Image.Resampling.NEAREST)
+            
+            # Add QR code to overlay
+            # preciso que a posição do QR code seja abaixo do logo, alinhado à esquerda
+            overlay.paste(qr_code_image, (50, 200), qr_code_image)
+
+            # Add "Scan to Validate" text below the QR code
+            # comentário: camada de texto criada para ficar logo abaixo do QR code, centralizada ao QR e com espaçamento justo
+            try:
+                # calcula centralização do texto com base na largura do QR
+                tmp_img = Image.new("RGBA", certificate_template.size, (255, 255, 255, 0))
+                tmp_draw = ImageDraw.Draw(tmp_img)
+                tmp_font = ImageFont.truetype(DETAILS_FONT, 16)
+                text_bbox = tmp_draw.textbbox((0, 0), "Scan to Validate", font=tmp_font)
+                text_w = text_bbox[2] - text_bbox[0]
+                text_x = 50 + int((qrcode_size[0] - text_w) / 2)
+                text_y = 185 + qrcode_size[1]  # espaçamento curto (quase colado)
+
+                scan_text_image = self.create_scan_to_validate_image(
+                    size=certificate_template.size,
+                    position=(text_x, text_y)
+                )
+                overlay.paste(scan_text_image, (0, 0), scan_text_image)
+                logger.info("Texto 'Scan to Validate' adicionado abaixo do QR code")
+            except Exception as e:
+                logger.warning(f"Falha ao adicionar texto 'Scan to Validate': {str(e)}")
+
+
             # Add name
             name_image = self.create_name_image(participant.name_completed(), certificate_template.size)
             
@@ -257,6 +298,19 @@ class CertifiedBuilder:
             return validation_code_image
         except Exception as e:
             logger.error(f"Erro ao criar imagem do código de validação: {str(e)}")
+            raise
+
+    def create_scan_to_validate_image(self, size: tuple, position: tuple) -> Image:
+        """Create image with the 'Scan to Validate' label using DETAILS_FONT at a given position."""
+        try:
+            # comentário: imagem transparente do tamanho do canvas com o texto posicionado
+            text_image = Image.new("RGBA", size, (255, 255, 255, 0))
+            draw = ImageDraw.Draw(text_image)
+            font = ImageFont.truetype(DETAILS_FONT, 16)
+            draw.text(position, "Scan to Validate", fill=TEXT_COLOR, font=font)
+            return text_image
+        except Exception as e:
+            logger.error(f"Erro ao criar imagem do texto 'Scan to Validate': {str(e)}")
             raise
 
     def calculate_text_position(self, text: str, font: ImageFont, draw: ImageDraw, size: tuple) -> tuple:
