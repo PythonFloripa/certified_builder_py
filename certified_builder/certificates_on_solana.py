@@ -32,7 +32,7 @@ class CertificatesOnSolana:
             dict: A dictionary with the registration result.
         """
         try:
-            with httpx.Client() as client:
+            with httpx.Client(timeout=60.0) as client:
                 response = client.post(
                     url= config.SERVICE_URL_REGISTRATION_API_SOLANA,
                     headers={
