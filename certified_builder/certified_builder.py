@@ -8,6 +8,7 @@ from models.participant import Participant
 from certified_builder.utils.fetch_file_certificate import fetch_file_certificate
 from certified_builder.certificates_on_solana import CertificatesOnSolana
 from certified_builder.make_qrcode import MakeQRCode
+from certified_builder.build_url_tech_floripa import build_url_tech_floripa
 
 FONT_NAME = os.path.join(os.path.dirname(__file__), "fonts/PinyonScript/PinyonScript-Regular.ttf")
 VALIDATION_CODE = os.path.join(os.path.dirname(__file__), "fonts/ChakraPetch/ChakraPetch-SemiBold.ttf")
@@ -61,7 +62,13 @@ class CertifiedBuilder:
                     #         "verificacao_url": "https://www.google.com"
                     #     }
                     # }
-                    participant.authenticity_verification_url = solana_response.get("blockchain", {}).get("verificacao_url", "")                    
+                    participant.validation_code = participant.formated_validation_code()
+                    
+                    participant.authenticity_verification_url = build_url_tech_floripa(
+                        solana_response.get("blockchain", {}).get("verificacao_url", ""),
+                        participant.validation_code,
+                        participant.event.order_id
+                    )
                     
                     if not participant.authenticity_verification_url:                        
                         raise RuntimeError("Failed to get authenticity verification URL from Solana response")
