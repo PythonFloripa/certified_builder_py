@@ -1,11 +1,13 @@
 import logging
+import tempfile
+import os
 from typing import List
-from models.participant import Participant
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
-import os
+from models.participant import Participant
 from certified_builder.utils.fetch_file_certificate import fetch_file_certificate
-import tempfile
+from certified_builder.certificates_on_solana import CertificatesOnSolana
+
 FONT_NAME = os.path.join(os.path.dirname(__file__), "fonts/PinyonScript/PinyonScript-Regular.ttf")
 VALIDATION_CODE = os.path.join(os.path.dirname(__file__), "fonts/ChakraPetch/ChakraPetch-SemiBold.ttf")
 DETAILS_FONT = os.path.join(os.path.dirname(__file__), "fonts/ChakraPetch/ChakraPetch-Regular.ttf")
@@ -44,6 +46,20 @@ class CertifiedBuilder:
             
             for participant in participants:
                 try:
+                    # Register certificate on Solana, with returned data extract url for verification
+                    solana_response = CertificatesOnSolana.register_certificate_on_solana(
+                        certificate_data={
+                            "name": participant.name_completed(),
+                            "event": participant.event.product_name,
+                            "email": participant.email,
+                            "certificate_code": participant.formated_validation_code()
+                        }
+                    )
+                    participant.authenticity_verification_url = solana_response.get("blockchain", {}).get("verificacao_url", "")                    
+                    
+                    if not participant.authenticity_verification_url:                        
+                        raise RuntimeError("Failed to get authenticity verification URL from Solana response")
+
                     # Download template and logo only if they are not shared
                     if not all_same_background:
                         certificate_template = self._download_image(participant.certificate.background)

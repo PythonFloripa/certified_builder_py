@@ -21,6 +21,7 @@ class Participant(BaseModel):
     validation_code: Optional[str] = Field(default_factory= lambda: ''.join(random.choices(string.hexdigits, k=9)), init=False)
     certificate: Optional[Certificate] = None
     event: Optional[Event] = None
+    authenticity_verification_url: Optional[str] = None
 
     def __str__(self):
         return f"Participant: {self.first_name} {self.last_name} - {self.email}"   
