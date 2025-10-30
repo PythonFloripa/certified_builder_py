@@ -1,7 +1,8 @@
 import pytest
 from unittest.mock import Mock, patch
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from certified_builder.certified_builder import CertifiedBuilder
+from certified_builder.certified_builder import DETAILS_FONT
 from models.participant import Participant
 from models.certificate import Certificate
 from models.event import Event
@@ -89,3 +90,62 @@ def test_build_certificates(certified_builder, mock_participant, mock_certificat
         assert isinstance(args[0], Image.Image)
         assert args[1] == mock_participant
         
+
+def _count_non_transparent_pixels(img: Image.Image) -> int:
+    # util simples para checar presença de conteúdo desenhado
+    alpha = img.split()[-1]
+    return sum(1 for p in alpha.getdata() if p != 0)
+
+
+def test_scan_to_validate_is_centered_and_below_qr(certified_builder, mock_participant, mock_certificate_template, mock_logo):
+    # Garante url para QR
+    mock_participant.authenticity_verification_url = "https://example.com/verify"
+
+    with patch('certified_builder.utils.fetch_file_certificate.fetch_file_certificate', side_effect=[mock_certificate_template, mock_logo]):
+        result = certified_builder.generate_certificate(mock_participant, mock_certificate_template, mock_logo)
+
+        # Recalcula posição esperada do texto seguindo a mesma lógica do código
+        qrcode_size = (150, 150)
+        qr_left = 50
+        qr_top = 200
+        draw_tmp = ImageDraw.Draw(Image.new("RGBA", mock_certificate_template.size, (255, 255, 255, 0)))
+        font = ImageFont.truetype(DETAILS_FONT, 16)
+        text = "Scan to Validate"
+        bbox = draw_tmp.textbbox((0, 0), text, font=font)
+        text_w = bbox[2] - bbox[0]
+
+        # Atenção: o código atual usa text_y = 185 + qrcode_size[1]
+        expected_y = 185 + qrcode_size[1]
+        expected_x = qr_left + int((qrcode_size[0] - text_w) / 2)
+
+        # Recorta uma área ao redor da posição esperada para verificar que há conteúdo
+        crop_width = max(text_w + 10, 60)
+        crop_height = 22
+        crop_box = (
+            max(expected_x - 5, 0),
+            max(expected_y - 2, 0),
+            min(expected_x - 5 + crop_width, result.width),
+            min(expected_y - 2 + crop_height, result.height),
+        )
+        cropped = result.crop(crop_box)
+
+        assert _count_non_transparent_pixels(cropped) > 0, "Texto 'Scan to Validate' não encontrado na área esperada"
+
+
+def test_qr_is_placed_at_expected_region(certified_builder, mock_participant, mock_certificate_template, mock_logo):
+    mock_participant.authenticity_verification_url = "https://example.com/verify"
+
+    with patch('certified_builder.utils.fetch_file_certificate.fetch_file_certificate', side_effect=[mock_certificate_template, mock_logo]):
+        result = certified_builder.generate_certificate(mock_participant, mock_certificate_template, mock_logo)
+
+        # QR é esperado em (50,200) com 150x150
+        qr_left, qr_top = 50, 200
+        qr_right, qr_bottom = qr_left + 150, qr_top + 150
+        qr_region = result.crop((qr_left, qr_top, qr_right, qr_bottom))
+
+        assert _count_non_transparent_pixels(qr_region) > 0, "QR não encontrado na região esperada"
+
+        # Região logo abaixo do QR deve conter o texto (algum conteúdo)
+        below_region = result.crop((qr_left, qr_bottom, qr_right, min(qr_bottom + 30, result.height)))
+        assert _count_non_transparent_pixels(below_region) > 0, "Nenhum conteúdo encontrado abaixo do QR onde o texto deveria estar"
+
