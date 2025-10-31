@@ -7,6 +7,7 @@ from models.participant import Participant
 from models.certificate import Certificate
 from models.event import Event
 from datetime import datetime
+from unittest.mock import patch
 
 @pytest.fixture
 def mock_certificate():
@@ -80,7 +81,37 @@ def test_create_validation_code_image(certified_builder, mock_participant, mock_
 def test_build_certificates(certified_builder, mock_participant, mock_certificate_template, mock_logo):
     participants = [mock_participant]
     
+    # comentário: mock do download de imagens e da resposta do serviço Solana para evitar chamada externa
     with patch('certified_builder.utils.fetch_file_certificate.fetch_file_certificate', side_effect=[mock_certificate_template, mock_logo]), \
+         patch('certified_builder.certified_builder.CertificatesOnSolana.register_certificate_on_solana', return_value={
+             # comentário: mock alinhado ao contrato atual do serviço
+             "status": "sucesso",
+             "certificado": {
+                 "event": "evento de teste",
+                 "name": "user test",
+                 "email": "user@test.com",
+                 "uuid": "uuid-123",
+                 "time": "2025-10-31 12:05:38",
+                 "json_canonico": {"fake": "data"},
+                 "hash_sha256": "deadbeef",
+                 "txid_solana": "fake_txid_abc123",
+                 "network": "devnet",
+                 "timestamp": "2025-10-31 12:05:39",
+                 "timestamp_unix": 1730366739
+             },
+             "blockchain": {
+                 "rede": "Solana Devnet",
+                 "explorer_url": "https://explorer.solana.com/tx/fake_txid_abc123?cluster=devnet",
+                 "verificacao_url": "http://localhost:8000/certificados/verify/fake_txid_abc123",
+                 "memo_program": "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr"
+             },
+             "validacao": {
+                 "como_validar": "Recrie o JSON canonizado e compare o hash SHA-256",
+                 "json_canonico_string": "{}",
+                 "hash_esperado": "deadbeef",
+                 "comando_validacao": "printf '{}' | shasum -a 256"
+             }
+         }), \
          patch.object(certified_builder, 'save_certificate') as mock_save:
         
         certified_builder.build_certificates(participants)

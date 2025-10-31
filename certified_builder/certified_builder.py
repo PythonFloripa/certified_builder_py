@@ -8,7 +8,7 @@ from models.participant import Participant
 from certified_builder.utils.fetch_file_certificate import fetch_file_certificate
 from certified_builder.certificates_on_solana import CertificatesOnSolana
 from certified_builder.make_qrcode import MakeQRCode
-from certified_builder.build_url_tech_floripa import build_url_tech_floripa
+from certified_builder.solana_explorer_url import extract_solana_explorer_url
 
 FONT_NAME = os.path.join(os.path.dirname(__file__), "fonts/PinyonScript/PinyonScript-Regular.ttf")
 VALIDATION_CODE = os.path.join(os.path.dirname(__file__), "fonts/ChakraPetch/ChakraPetch-SemiBold.ttf")
@@ -58,11 +58,8 @@ class CertifiedBuilder:
                         }
                     )
                                                            
-                    participant.authenticity_verification_url = build_url_tech_floripa(
-                        solana_response=solana_response,
-                        validation_code=participant.formated_validation_code(),
-                        order_id=participant.event.order_id
-                    )
+                    # alteração: agora usamos a função renomeada que apenas extrai o explorer_url
+                    participant.authenticity_verification_url = extract_solana_explorer_url(solana_response=solana_response)
                     
                     if not participant.authenticity_verification_url:                        
                         raise RuntimeError("Failed to get authenticity verification URL from Solana response")
