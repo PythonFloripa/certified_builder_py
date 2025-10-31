@@ -7,6 +7,7 @@ from models.participant import Participant
 from models.certificate import Certificate
 from models.event import Event
 from datetime import datetime
+from unittest.mock import patch
 
 @pytest.fixture
 def mock_certificate():
@@ -80,7 +81,20 @@ def test_create_validation_code_image(certified_builder, mock_participant, mock_
 def test_build_certificates(certified_builder, mock_participant, mock_certificate_template, mock_logo):
     participants = [mock_participant]
     
+    # comentário: mock do download de imagens e da resposta do serviço Solana para evitar chamada externa
     with patch('certified_builder.utils.fetch_file_certificate.fetch_file_certificate', side_effect=[mock_certificate_template, mock_logo]), \
+         patch('certified_builder.certified_builder.CertificatesOnSolana.register_certificate_on_solana', return_value={
+             "status": "encontrado",
+             "explorer_url": "https://explorer.solana.com/tx/abc123?cluster=devnet",
+             "certificado": {
+                 "event": "evento de teste",
+                 "uuid": "uuid-123",
+                 "name": "user test",
+                 "email": "user@test.com",
+                 "certificate_code": "ABC-123-XYZ",
+                 "time": "2025-10-31 12:05:38"
+             }
+         }), \
          patch.object(certified_builder, 'save_certificate') as mock_save:
         
         certified_builder.build_certificates(participants)
