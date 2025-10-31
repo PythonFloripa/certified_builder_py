@@ -57,14 +57,9 @@ class CertifiedBuilder:
                             "certificate_code": participant.formated_validation_code()
                         }
                     )
-                    # solana_response = {
-                    #     "blockchain": {
-                    #         "verificacao_url": "https://www.google.com"
-                    #     }
-                    # }
-                                                            
+                                                           
                     participant.authenticity_verification_url = build_url_tech_floripa(
-                        url_service_solona=solana_response.get("blockchain", {}).get("verificacao_url", ""),
+                        solana_response=solana_response,
                         validation_code=participant.formated_validation_code(),
                         order_id=participant.event.order_id
                     )

@@ -20,7 +20,8 @@ def _install_config_mock() -> None:
         QUEUE_URL = "https://sqs.us-east-1.amazonaws.com/000000000000/test"
         SERVICE_URL_REGISTRATION_API_SOLANA = "https://example.test/solana/register"
         SERVICE_API_KEY_REGISTRATION_API_SOLANA = "test-api-key"
-        TECH_FLORIPA_CERTIFICATE_VALIDATE_URL = "https://example.test/validate/certificate"
+        # comentário: URL de validação mockada para o Tech Floripa usada nos testes
+        TECH_FLORIPA_CERTIFICATE_VALIDATE_URL = "https://example.test/certificate-validate/"
 
     # comentário: expõe tanto a classe quanto a instância, como o módulo real faria
     mock_module.Config = MockConfig
