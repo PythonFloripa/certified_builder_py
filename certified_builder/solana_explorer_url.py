@@ -1,5 +1,5 @@
 def extract_solana_explorer_url(solana_response: dict) -> str:
-    # alteração: função isolada para extrair a URL do explorer da resposta do serviço
+    # alteração: extrai a URL do explorer do bloco "blockchain" conforme contrato oficial
     explorer_url = solana_response.get("blockchain", {}).get("explorer_url", "")
     return explorer_url
 
