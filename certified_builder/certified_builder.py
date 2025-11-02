@@ -66,7 +66,7 @@ class CertifiedBuilder:
                     
                     if not participant.authenticity_verification_url:                        
                         raise RuntimeError("Failed to get authenticity verification URL from Solana response")
-
+                    logger.info(f"URL de verificação de autenticidade: {participant.authenticity_verification_url}")
                     # Download template and logo only if they are not shared
                     if not all_same_background:
                         certificate_template = self._download_image(participant.certificate.background)
