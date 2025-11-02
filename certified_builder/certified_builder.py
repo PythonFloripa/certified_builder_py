@@ -1,10 +1,9 @@
 import logging
-import tempfile
 import os
 from typing import List
 from PIL import Image, ImageDraw, ImageFont
-from io import BytesIO
 from models.participant import Participant
+from config import config
 from certified_builder.utils.fetch_file_certificate import fetch_file_certificate
 from certified_builder.certificates_on_solana import CertificatesOnSolana
 from certified_builder.make_qrcode import MakeQRCode
@@ -33,6 +32,7 @@ class CertifiedBuilder:
             # Cache for background and logo if they are the same for all participants
             certificate_template = None
             logo = None
+            logo_tech_floripa = None
             
             # Check if all participants share the same background and logo
             if participants:
@@ -46,6 +46,9 @@ class CertifiedBuilder:
                 if all_same_logo:
                     logo = self._download_image(first_participant.certificate.logo)
             
+                if not logo_tech_floripa:
+                    logo_tech_floripa = self._download_image(config.TECH_FLORIPA_LOGO_URL)
+
             for participant in participants:
                 try:
                     # Register certificate on Solana, with returned data extract url for verification
@@ -57,13 +60,13 @@ class CertifiedBuilder:
                             "certificate_code": participant.formated_validation_code()
                         }
                     )
-                                                           
+                
                     # alteração: agora usamos a função renomeada que apenas extrai o explorer_url
                     participant.authenticity_verification_url = extract_solana_explorer_url(solana_response=solana_response)
                     
                     if not participant.authenticity_verification_url:                        
                         raise RuntimeError("Failed to get authenticity verification URL from Solana response")
-
+                    logger.info(f"URL de verificação de autenticidade: {participant.authenticity_verification_url}")
                     # Download template and logo only if they are not shared
                     if not all_same_background:
                         certificate_template = self._download_image(participant.certificate.background)
@@ -71,7 +74,7 @@ class CertifiedBuilder:
                         logo = self._download_image(participant.certificate.logo)
                     
                     # Generate and save certificate
-                    certificate_generated = self.generate_certificate(participant, certificate_template, logo)
+                    certificate_generated = self.generate_certificate(participant, certificate_template, logo, logo_tech_floripa)
                     certificate_path = self.save_certificate(certificate_generated, participant)
                     
                     results.append({
@@ -121,7 +124,7 @@ class CertifiedBuilder:
             new_img.paste(img.convert('RGB'), (0, 0))
             return new_img
 
-    def generate_certificate(self, participant: Participant, certificate_template: Image, logo: Image):
+    def generate_certificate(self, participant: Participant, certificate_template: Image, logo: Image, logo_tech_floripa: Image):
         """Generate a certificate for a participant."""
         try:
             # Ensure images have valid transparency channels
@@ -145,9 +148,10 @@ class CertifiedBuilder:
                 # Fallback without using the logo as its own mask
                 overlay.paste(logo, (50, 50))
             
-           
+            url_qr_code = f"{config.TECH_FLORIPA_CERTIFICATE_VALIDATE_URL}?validate_code={participant.formated_validation_code()}"
             qrcode_size = (150, 150)                       
-            qr_code_image_io = MakeQRCode.generate_qr_code(participant.authenticity_verification_url)            
+            logger.info(f"URL do QR code: {url_qr_code} para o certificado de {participant.name_completed()}")
+            qr_code_image_io = MakeQRCode.generate_qr_code(url_qr_code, logo_tech_floripa=logo_tech_floripa)                            
             qr_code_image = Image.open(qr_code_image_io).convert("RGBA")            
             # comentário: para manter o QR nítido, usamos NEAREST ao redimensionar
             if qr_code_image.size != qrcode_size:
