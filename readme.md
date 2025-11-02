@@ -1,6 +1,6 @@
 # Certified Builder Py
 
-Sistema de geração automática de certificados para eventos usando AWS Lambda e Docker. O projeto gera certificados personalizados para participantes de eventos, processando mensagens do SQS e utilizando templates predefinidos.
+Sistema de geração automática de certificados para eventos usando AWS Lambda e Docker. O projeto gera certificados personalizados para participantes de eventos, processando mensagens do SQS e utilizando templates predefinidos. Os certificados incluem QR code para validação com logo Tech Floripa no centro e são registrados na blockchain Solana para autenticação.
 
 [![Continuos Integration -Testing - Certified Builder Py](https://github.com/maxsonferovante/certified_builder_py/actions/workflows/workflow_testing.yaml/badge.svg)](https://github.com/maxsonferovante/certified_builder_py/actions/workflows/workflow_testing.yaml)
 
@@ -13,11 +13,13 @@ Sistema de geração automática de certificados para eventos usando AWS Lambda 
   - Código de validação único
   - Logo do evento
   - Detalhes do evento em três linhas centralizadas
-  - QR Code para validação
+  - QR Code para validação com logo Tech Floripa no centro
+  - Registro na blockchain Solana para autenticação
 - Processamento de mensagens SQS
 - Execução em container Docker
 - Deploy automatizado para AWS Lambda
 - Integração com AWS ECR
+- Envio de mensagens para fila de notificação com dados do certificado
 
 ## Estrutura do Projeto
 
@@ -25,16 +27,25 @@ Sistema de geração automática de certificados para eventos usando AWS Lambda 
 project_root/
 ├── certified_builder/
 │   ├── certified_builder.py    # Classe principal de geração de certificados
+│   ├── make_qrcode.py          # Geração de QR codes com logo
+│   ├── certificates_on_solana.py  # Integração com blockchain Solana
+│   ├── solana_explorer_url.py  # Extração de URL do Solana Explorer
 │   └── utils/
 │       └── fetch_file_certificate.py  # Utilitário para download de imagens
 ├── models/
 │   ├── participant.py          # Modelo de dados do participante
 │   ├── certificate.py          # Modelo de dados do certificado
 │   └── event.py               # Modelo de dados do evento
+├── aws/
+│   ├── sqs_service.py         # Serviço para envio de mensagens SQS
+│   ├── s3_service.py          # Serviço para upload no S3
+│   └── boto_aws.py            # Configuração do cliente AWS
 ├── fonts/
 │   ├── PinyonScript/          # Fonte para o nome do participante
 │   └── ChakraPetch/           # Fonte para detalhes e código de validação
+├── tests/                     # Testes automatizados
 ├── lambda_function.py         # Handler da função Lambda
+├── config.py                  # Configurações do projeto
 ├── Dockerfile                 # Configuração do container
 └── requirements.txt           # Dependências do projeto
 ```
@@ -45,12 +56,16 @@ project_root/
 - Pillow (Processamento de imagens)
 - httpx (Requisições HTTP)
 - Pydantic (Validação de dados)
+- qrcode (Geração de QR codes)
 - Docker
 - AWS Lambda
 - AWS ECR
 - AWS SQS
+- Solana Blockchain (Registro de certificados)
 
-## Formato da Mensagem SQS
+## Formato da Mensagem SQS (Entrada)
+
+A Lambda recebe mensagens do SQS com os dados dos participantes para gerar os certificados:
 
 ```json
 {
@@ -75,6 +90,38 @@ project_root/
   ]
 }
 ```
+
+## Formato da Mensagem SQS (Saída - Fila de Notificação)
+
+Após a geração dos certificados, uma mensagem é enviada para outra fila SQS com os dados do certificado gerado:
+
+```json
+[
+  {
+    "order_id": 123,
+    "validation_code": "ABC-DEF-GHI",
+    "authenticity_verification_url": "https://explorer.solana.com/tx/...?cluster=devnet",
+    "product_id": 456,
+    "product_name": "Nome do Evento",
+    "email": "email@exemplo.com",
+    "certificate_key": "certificates/456/123/Nome_Sobrenome_Nome_do_Evento_ABC-DEF-GHI.png",
+    "success": true
+  }
+]
+```
+
+### Campos da Mensagem de Saída
+
+- **`order_id`**: ID do pedido/ordem
+- **`validation_code`**: Código de validação do certificado (formato: XXX-XXX-XXX)
+- **`authenticity_verification_url`**: URL do Solana Explorer para verificação na blockchain
+- **`product_id`**: ID do produto/evento
+- **`product_name`**: Nome do produto/evento
+- **`email`**: Email do participante
+- **`certificate_key`**: Chave do certificado no S3 (formato: `certificates/{product_id}/{order_id}/{nome_certificado}.png`)
+- **`success`**: Indica se a geração foi bem-sucedida (true/false)
+
+**Nota**: A mensagem é enviada como um array, podendo conter múltiplos certificados quando processados em lote.
 
 ## Desenvolvimento Local
 
@@ -118,11 +165,14 @@ O deploy é automatizado através do GitHub Actions:
 
 ## Estrutura do Certificado Gerado
 
-- **Logo**: Canto superior esquerdo (150x150 pixels)
+- **Logo do Evento**: Canto superior esquerdo (150x150 pixels máximo, redimensionado automaticamente)
 - **Nome**: Centro do certificado (fonte Pinyon Script)
 - **Detalhes**: Três linhas centralizadas abaixo do nome (fonte Chakra Petch)
+- **QR Code**: Posicionado abaixo do logo (150x150 pixels) com logo Tech Floripa centralizado
+  - Contém URL de validação com código único: `https://tech.floripa.br/certificate-validate/?validate_code=XXX-XXX-XXX`
+  - Usa correção de erros nível H (30% redundância) para garantir leitura mesmo com logo
+- **Texto "Scan to Validate"**: Abaixo do QR code, centralizado
 - **Código de Validação**: Canto inferior direito (fonte Chakra Petch)
-- **QR Code**: Canto inferior direito para validação online
 
 ## Contribuindo
 

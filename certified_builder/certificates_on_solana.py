@@ -21,7 +21,7 @@ class CertificatesOnSolana:
 
     @staticmethod
     def register_certificate_on_solana(certificate_data: dict) -> dict:
-        logger.info("Registering certificate on Solana blockchain")
+        logger.info("Registering certificate on Solana blockchain with data: %s", certificate_data)
         """
         Registers a certificate on the Solana blockchain.
 
@@ -41,11 +41,10 @@ class CertificatesOnSolana:
                     },
                     json=certificate_data
                 )
-                logger.info(f"Solana response status code: {response.status_code}")
+                logger.info(f"Solana response status code: {response.status_code}")                
                 response.raise_for_status()
                 solana_response = response.json()
                 return solana_response                
-            logger.info("Certificate registered successfully on Solana")
         except Exception as e:
             logger.error(f"Error registering certificate on Solana: {str(e)}")
             raise CertificatesOnSolanaException(details=str(e), cause=e)
