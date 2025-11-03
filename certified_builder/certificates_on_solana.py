@@ -1,5 +1,6 @@
 import logging
 import httpx
+from retry import retry
 from pydantic import BaseModel
 from config import config
 
@@ -14,12 +15,14 @@ class CertificatesOnSolanaException(Exception):
         super().__init__(message)
         self.details = details
         self.cause = cause
+
 class CertificatesOnSolana:
 
     """ 
     A class to manage certificates on the Solana blockchain Service."""
 
     @staticmethod
+    @retry(tries=3, delay=3, backoff=2, exceptions=(httpx.RequestError,CertificatesOnSolanaException, Exception), logger=logger)
     def register_certificate_on_solana(certificate_data: dict) -> dict:
         logger.info("Registering certificate on Solana blockchain with data: %s", certificate_data)
         """
