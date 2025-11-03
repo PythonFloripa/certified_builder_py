@@ -1,10 +1,6 @@
 # Certified Builder Py
 
-Sistema de geração automática de certificados para eventos usando AWS Lambda e Docker. O projeto gera certificados personalizados para participantes de eventos, processando mensagens do SQS e utilizando templates predefinidos. Os certificados incluem QR code para validação com logo Tech Floripa no centro e são registrados na blockchain Solana para autenticação.
-
-[![Continuos Integration -Testing - Certified Builder Py](https://github.com/maxsonferovante/certified_builder_py/actions/workflows/workflow_testing.yaml/badge.svg)](https://github.com/maxsonferovante/certified_builder_py/actions/workflows/workflow_testing.yaml)
-
-[![Publish Docker image to AWS ECR Private](https://github.com/maxsonferovante/certified_builder_py/actions/workflows/workflow_build.yaml/badge.svg)](https://github.com/maxsonferovante/certified_builder_py/actions/workflows/workflow_build.yaml)
+Sistema de geração automática de certificados para eventos usando AWS Lambda e Docker. O projeto gera certificados personalizados para participantes de eventos, processando mensagens do SQS e utilizando templates predefinidos. Os certificados incluem QR code para validação com logo [Tech Floripa](https://tech.floripa.br/) no centro e são registrados na blockchain Solana para autenticação.
 
 ## Funcionalidades
 
@@ -61,7 +57,7 @@ project_root/
 - AWS Lambda
 - AWS ECR
 - AWS SQS
-- Solana Blockchain (Registro de certificados)
+- [Solana Blockchain (Registro de certificados)](https://github.com/p4ndabk/certificates-on-solana)
 
 ## Formato da Mensagem SQS (Entrada)
 
