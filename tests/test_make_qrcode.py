@@ -36,5 +36,3 @@ def test_qr_has_transparent_background_and_visible_foreground(mock_logo_tech_flo
     # Deve haver pixels transparentes (fundo) e opacos (padrão do QR)
     assert zeros > 0, "Esperava-se pixels transparentes no QR"
     assert nonzeros > 0, "Esperava-se pixels opacos no QR"
-
-

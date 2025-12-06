@@ -21,9 +21,11 @@ def _install_config_mock() -> None:
         SERVICE_URL_REGISTRATION_API_SOLANA = "https://example.test/solana/register"
         SERVICE_API_KEY_REGISTRATION_API_SOLANA = "test-api-key"
         # comentário: URL de validação mockada para o Tech Floripa usada nos testes
-        TECH_FLORIPA_CERTIFICATE_VALIDATE_URL = "https://example.test/certificate-validate/"
+        TECH_FLORIPA_CERTIFICATE_VALIDATE_URL = (
+            "https://example.test/certificate-validate/"
+        )
         TECH_FLORIPA_LOGO_URL = "https://example.test/logo.png"
-        
+
     # comentário: expõe tanto a classe quanto a instância, como o módulo real faria
     mock_module.Config = MockConfig
     mock_module.config = MockConfig()
@@ -57,9 +59,7 @@ def _mock_solana_registration(monkeypatch, request):
 
     # comentário: resposta estável usada nos demais testes
     fake_response = {
-        "blockchain": {
-            "verificacao_url": "https://example.test/verify/abc123"
-        }
+        "blockchain": {"verificacao_url": "https://example.test/verify/abc123"}
     }
 
     # comentário: função fake substitui o método estático
@@ -70,12 +70,10 @@ def _mock_solana_registration(monkeypatch, request):
 
     # comentário: injeta o mock no alvo correto
     from certified_builder.certificates_on_solana import CertificatesOnSolana
+
     monkeypatch.setattr(
         CertificatesOnSolana,
         "register_certificate_on_solana",
         staticmethod(_fake_register_certificate_on_solana),
         raising=False,
     )
-
-
-
