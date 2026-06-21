@@ -1,36 +1,36 @@
-FROM public.ecr.aws/lambda/python:3.13
+FROM python:3.13-slim
 
-# Install system dependencies
-RUN dnf update -y && \
-    dnf install -y \
-    freetype-devel \
-    libjpeg-turbo-devel \
-    zlib-devel \
-    gcc \
-    make \
-    python3-devel \
-    fontconfig && \
-    dnf clean all
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    fontconfig \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    zlib1g-dev && \
+    rm -rf /var/lib/apt/lists/*
 
-# Set working directory
-WORKDIR ${LAMBDA_TASK_ROOT}
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/var/task
+ENV FONTCONFIG_PATH=/etc/fonts
+ENV AWS_LAMBDA_RUNTIME_API=""
 
-# Copy requirements first to leverage Docker cache
+WORKDIR /var/task
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir awslambdaric
 
-# Copy the entire application
+ADD https://github.com/aws/aws-lambda-runtime-interface-emulator/releases/latest/download/aws-lambda-rie /usr/local/bin/aws-lambda-rie
+RUN chmod +x /usr/local/bin/aws-lambda-rie
+
 COPY . .
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Create necessary directories
 RUN mkdir -p /tmp/certificates && \
     chmod 777 /tmp/certificates
 
-# Set environment variables
-ENV PYTHONPATH=${LAMBDA_TASK_ROOT}
-ENV FONTCONFIG_PATH=/etc/fonts
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# Set the CMD to your handler
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD [ "lambda_function.lambda_handler" ]

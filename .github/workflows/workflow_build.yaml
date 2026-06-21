@@ -1,4 +1,4 @@
-name: Publish Docker Image to AWS ECR Private
+name: Deploy Lambda ZIP
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
       - main
 jobs:
   build:
-    name: Build and push Docker image
+    name: Package and deploy Lambda ZIP
     runs-on: ubuntu-latest
     environment: certified-builder-py
     steps:
@@ -22,25 +22,37 @@ jobs:
           aws-region: us-east-1
           audience: sts.amazonaws.com
 
-      - name: Login to Amazon ECR Private
-        run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
-
-      - name: Build Docker image
+      - name: Prepare package directories
         run: |
-          docker build -t ${{ secrets.ECR_REPOSITORY_BUILDER }}:latest .
-          docker tag ${{ secrets.ECR_REPOSITORY_BUILDER }}:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_BUILDER }}:latest
+          rm -rf dist
+          mkdir -p dist/package
 
-      - name: Push Docker image
+      - name: Build Lambda ZIP
         run: |
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_BUILDER }}:latest
+          docker run --rm \
+            -v "$PWD:/work" \
+            -w /work \
+            python:3.13-slim \
+            bash -lc '
+              set -euo pipefail
+              apt-get update >/dev/null
+              apt-get install -y zip >/dev/null
+              python -m pip install --upgrade pip >/dev/null
+              python -m pip install --no-cache-dir -r requirements.txt -t dist/package >/dev/null
+              cp -R aws certified_builder models dist/package/
+              cp lambda_function.py config.py requirements.txt dist/package/
+              cd dist/package
+              zip -qr ../lambda.zip .
+            '
 
-      - name: Update Lambda function
+      - name: Deploy Lambda ZIP
         run: |
           aws lambda update-function-code \
-            --function-name tech-floripa-certificates-api-dev \
-            --image-uri ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/${{ secrets.ECR_REPOSITORY_BUILDER }}:latest
+            --function-name tech-floripa-certificates-builder-dev \
+            --zip-file fileb://dist/lambda.zip
+          aws lambda wait function-updated \
+            --function-name tech-floripa-certificates-builder-dev
 
       - name: Complete
         run: |
-          echo "Docker image has been pushed to AWS ECR Private and Lambda function has been updated"
-
+          echo "Lambda ZIP deployed successfully"
