@@ -13,8 +13,7 @@ Sistema de geração automática de certificados para eventos usando AWS Lambda 
   - Registro na blockchain Solana para autenticação
 - Processamento de mensagens SQS
 - Execução em container Docker
-- Deploy automatizado para AWS Lambda
-- Integração com AWS ECR
+- Deploy automatizado para AWS Lambda via ZIP package
 - Envio de mensagens para fila de notificação com dados do certificado
 
 ## Estrutura do Projeto
@@ -55,7 +54,6 @@ project_root/
 - qrcode (Geração de QR codes)
 - Docker
 - AWS Lambda
-- AWS ECR
 - AWS SQS
 - [Solana Blockchain (Registro de certificados)](https://github.com/p4ndabk/certificates-on-solana)
 
@@ -142,7 +140,7 @@ pip install -r requirements.txt
 
 3. Execute com Docker:
 ```bash
-docker build -t certified-builder . && docker run -p 9000:8080 certified-builder
+docker compose up --build
 ```
 
 4. Teste localmente:
@@ -155,9 +153,9 @@ curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d
 O deploy é automatizado através do GitHub Actions:
 
 1. Push para a branch main dispara o workflow
-2. Imagem Docker é construída
-3. Upload para AWS ECR
-4. Atualização da função Lambda
+2. Um pacote ZIP compatível com Lambda é gerado em ambiente Linux
+3. O workflow executa `aws lambda update-function-code`
+4. A função `tech-floripa-certificates-builder-dev` recebe o novo código
 
 ## Estrutura do Certificado Gerado
 
@@ -181,4 +179,3 @@ O deploy é automatizado através do GitHub Actions:
 ## Licença
 
 Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
-
