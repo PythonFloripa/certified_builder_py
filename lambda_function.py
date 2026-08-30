@@ -71,16 +71,6 @@ def create_participant_object(participant_data):
             if participant_data.get("time_checkin")
             else None
         ),
-        checkin_latitude=(
-            float(participant_data.get("checkin_latitude"))
-            if participant_data.get("checkin_latitude")
-            else None
-        ),
-        checkin_longitude=(
-            float(participant_data.get("checkin_longitude"))
-            if participant_data.get("checkin_longitude")
-            else None
-        ),
     )
 
     # Create Participant object
@@ -88,8 +78,6 @@ def create_participant_object(participant_data):
         first_name=participant_data.get("first_name"),
         last_name=participant_data.get("last_name"),
         email=participant_data.get("email"),
-        phone=participant_data.get("phone"),
-        cpf=participant_data.get("cpf", ""),
         certificate=certificate,
         event=event,
     )

@@ -27,8 +27,6 @@ def mock_event():
         product_name="Evento de Teste",
         date=datetime.strptime("2025-03-26 20:55:25", "%Y-%m-%d %H:%M:%S"),
         time_checkin=datetime.strptime("2025-03-26 20:55:44", "%Y-%m-%d %H:%M:%S"),
-        checkin_latitude=-27.5460492,
-        checkin_longitude=-48.6227075,
     )
 
 
@@ -38,8 +36,6 @@ def mock_participant(mock_certificate, mock_event):
         first_name="Jardel",
         last_name="Godinho",
         email="jardelgodinho@gmail.com",
-        phone="(48) 98866-7447",
-        cpf="000.000.000-00",
         certificate=mock_certificate,
         event=mock_event,
     )
@@ -451,8 +447,6 @@ def test_build_certificates_with_multiple_participants_same_resources(
         first_name="Maria",
         last_name="Silva",
         email="maria@example.com",
-        phone="(48) 99999-9999",
-        cpf="111.111.111-11",
         certificate=mock_participant.certificate,
         event=mock_participant.event,
     )
@@ -507,8 +501,6 @@ def test_build_certificates_with_different_backgrounds(
         first_name="João",
         last_name="Santos",
         email="joao@example.com",
-        phone="(48) 88888-8888",
-        cpf="222.222.222-22",
         certificate=second_certificate,
         event=mock_participant.event,
     )
@@ -627,16 +619,12 @@ def test_generate_certificate_with_long_name(
         product_name="Evento Teste",
         date=datetime.now(),
         time_checkin=datetime.now(),
-        checkin_latitude=0.0,
-        checkin_longitude=0.0,
     )
 
     long_name_participant = Participant(
         first_name="João Pedro",
         last_name="da Silva Santos Oliveira",
         email="joao@example.com",
-        phone="(48) 99999-9999",
-        cpf="123.456.789-00",
         certificate=mock_certificate,
         event=mock_event,
     )

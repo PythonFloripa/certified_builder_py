@@ -17,8 +17,6 @@ class Participant(BaseModel):
     first_name: str
     last_name: str
     email: EmailStr
-    phone: str
-    cpf: str
     validation_code: Optional[str] = Field(
         default_factory=lambda: "".join(random.choices(string.hexdigits, k=9)),
         init=False,

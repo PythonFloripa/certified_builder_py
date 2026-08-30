@@ -23,8 +23,6 @@ def mock_event():
         product_name="Evento de Teste",
         date=datetime.strptime("2025-03-26 20:55:25", "%Y-%m-%d %H:%M:%S"),
         time_checkin=datetime.strptime("2025-03-26 20:55:44", "%Y-%m-%d %H:%M:%S"),
-        checkin_latitude=-27.5460492,
-        checkin_longitude=-48.6227075,
     )
 
 
@@ -33,8 +31,6 @@ def test_participant_initialization(mock_certificate, mock_event):
         first_name="Jardel",
         last_name="Godinho",
         email="jardelgodinho@gmail.com",
-        phone="(48) 98866-7447",
-        cpf="000.000.000-00",
         certificate=mock_certificate,
         event=mock_event,
     )
@@ -42,8 +38,6 @@ def test_participant_initialization(mock_certificate, mock_event):
     assert participant.first_name == "Jardel"
     assert participant.last_name == "Godinho"
     assert participant.email == "jardelgodinho@gmail.com"
-    assert participant.phone == "(48) 98866-7447"
-    assert participant.cpf == "000.000.000-00"
     assert participant.certificate == mock_certificate
     assert participant.event == mock_event
     assert len(participant.validation_code) == 9
@@ -54,8 +48,6 @@ def test_name_completed(mock_certificate, mock_event):
         first_name="Jardel",
         last_name="Godinho",
         email="jardelgodinho@gmail.com",
-        phone="(48) 98866-7447",
-        cpf="000.000.000-00",
         certificate=mock_certificate,
         event=mock_event,
     )
@@ -67,8 +59,6 @@ def test_formated_validation_code(mock_certificate, mock_event):
         first_name="Jardel",
         last_name="Godinho",
         email="jardelgodinho@gmail.com",
-        phone="(48) 98866-7447",
-        cpf="000.000.000-00",
         certificate=mock_certificate,
         event=mock_event,
     )
@@ -83,8 +73,6 @@ def test_create_name_certificate(mock_certificate, mock_event):
         first_name="Jardel",
         last_name="Godinho",
         email="jardelgodinho@gmail.com",
-        phone="(48) 98866-7447",
-        cpf="000.000.000-00",
         certificate=mock_certificate,
         event=mock_event,
     )
@@ -101,8 +89,6 @@ def test_invalid_email(mock_certificate, mock_event):
             first_name="Jardel",
             last_name="Godinho",
             email="invalid-email",
-            phone="(48) 98866-7447",
-            cpf="000.000.000-00",
             certificate=mock_certificate,
             event=mock_event,
         )
@@ -114,8 +100,6 @@ def test_missing_required_field(mock_certificate, mock_event):
         Participant(
             first_name="Jardel",
             email="jardelgodinho@gmail.com",
-            phone="(48) 98866-7447",
-            cpf="000.000.000-00",
             certificate=mock_certificate,
             event=mock_event,
         )
@@ -126,8 +110,6 @@ def test_name_completed_with_multiple_names(mock_certificate, mock_event):
         first_name="Jardel Silva",
         last_name="Godinho Santos",
         email="jardelgodinho@gmail.com",
-        phone="(48) 98866-7447",
-        cpf="000.000.000-00",
         certificate=mock_certificate,
         event=mock_event,
     )
@@ -145,16 +127,12 @@ def test_sanitize_filename_special_characters(mock_certificate):
         product_name="87º Python Floripa × CODECON @ UNICESUSC",
         date=datetime.strptime("2025-03-26 20:55:25", "%Y-%m-%d %H:%M:%S"),
         time_checkin=datetime.strptime("2025-03-26 20:55:44", "%Y-%m-%d %H:%M:%S"),
-        checkin_latitude=-27.5460492,
-        checkin_longitude=-48.6227075,
     )
 
     participant = Participant(
         first_name="Rodrigo",
         last_name="Farah",
         email="rodrigo@example.com",
-        phone="(48) 98866-7447",
-        cpf="000.000.000-00",
         certificate=mock_certificate,
         event=event_with_special_chars,
     )
@@ -180,16 +158,12 @@ def test_create_name_certificate_with_special_characters(mock_certificate):
         product_name="87º Python Floripa × CODECON @ UNICESUSC",
         date=datetime.strptime("2025-06-19 11:15:31", "%Y-%m-%d %H:%M:%S"),
         time_checkin=datetime.strptime("2025-06-19 11:15:31", "%Y-%m-%d %H:%M:%S"),
-        checkin_latitude=-27.5460492,
-        checkin_longitude=-48.6227075,
     )
 
     participant = Participant(
         first_name="Rodrigo",
         last_name="Farah",
         email="rodrigo.farah@example.com",
-        phone="(48) 98866-7447",
-        cpf="000.000.000-00",
         certificate=mock_certificate,
         event=event_with_special_chars,
     )
@@ -221,8 +195,6 @@ def test_sanitize_filename_edge_cases(mock_certificate, mock_event):
         first_name="Test",
         last_name="User",
         email="test@example.com",
-        phone="(48) 98866-7447",
-        cpf="000.000.000-00",
         certificate=mock_certificate,
         event=mock_event,
     )
